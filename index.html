@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>汉语朗读练习</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --ink: #1d2939;
+      --muted: #667085;
+      --line: #d0d5dd;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --success: #067647;
+      --warning: #b54708;
+      --danger: #b42318;
+      --soft-blue: #eff6ff;
+      --soft-green: #ecfdf3;
+      --shadow: 0 12px 30px rgba(16, 24, 40, .08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, #dbeafe 0, transparent 30%),
+        var(--bg);
+      font-family: Inter, "Noto Sans SC", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    .page {
+      width: min(760px, calc(100% - 32px));
+      margin: 36px auto 64px;
+    }
+
+    .brand {
+      margin: 0 0 16px;
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(26px, 5vw, 38px);
+      line-height: 1.18;
+    }
+
+    .subtitle {
+      margin: 10px 0 24px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .card {
+      margin-top: 16px;
+      padding: 24px;
+      background: var(--card);
+      border: 1px solid rgba(208, 213, 221, .8);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 8px;
+      color: #344054;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .target {
+      margin: 8px 0 0;
+      font-size: clamp(28px, 6vw, 46px);
+      line-height: 1.5;
+      font-family: "Noto Serif SC", "Songti SC", SimSun, serif;
+      word-break: break-word;
+    }
+
+    .pinyin {
+      margin: 14px 0 0;
+      color: var(--primary-dark);
+      font-size: 18px;
+      line-height: 1.65;
+    }
+
+    .russian {
+      margin: 12px 0 0;
+      padding: 12px 14px;
+      color: #344054;
+      background: #f8fafc;
+      border-left: 4px solid #94a3b8;
+      border-radius: 8px;
+      line-height: 1.6;
+    }
+
+    .instructions {
+      margin: 12px 0 0;
+      color: #475467;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .due {
+      margin-top: 14px;
+      color: var(--warning);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px 14px;
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font: inherit;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button, .download-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 11px 16px;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform .15s ease, background .15s ease, opacity .15s ease;
+    }
+
+    button:hover:not(:disabled), .download-link:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .55;
+    }
+
+    .primary {
+      color: white;
+      background: var(--primary);
+    }
+
+    .primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+    }
+
+    .secondary {
+      color: #344054;
+      background: #eef2f6;
+    }
+
+    .danger {
+      color: white;
+      background: var(--danger);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .status {
+      margin: 16px 0 0;
+      padding: 12px 14px;
+      border-radius: 10px;
+      line-height: 1.5;
+    }
+
+    .status.info {
+      color: #1d4ed8;
+      background: var(--soft-blue);
+    }
+
+    .status.success {
+      color: var(--success);
+      background: var(--soft-green);
+    }
+
+    .status.error {
+      color: var(--danger);
+      background: #fef3f2;
+    }
+
+    .status.warning {
+      color: var(--warning);
+      background: #fffaeb;
+    }
+
+    .recording {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 14px;
+      color: var(--danger);
+      font-weight: 700;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: #f04438;
+      box-shadow: 0 0 0 0 rgba(240, 68, 56, .6);
+      animation: pulse 1.2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(240, 68, 56, .55); }
+      70% { box-shadow: 0 0 0 10px rgba(240, 68, 56, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(240, 68, 56, 0); }
+    }
+
+    audio {
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .small {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .footer {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      text-align: center;
+    }
+
+    @media (max-width: 520px) {
+      .page {
+        width: min(100% - 20px, 760px);
+        margin-top: 18px;
+      }
+
+      .card {
+        padding: 18px;
+        border-radius: 14px;
+      }
+
+      .buttons > * {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <p class="brand">Mandarin Reading Practice</p>
+    <h1 id="pageTitle">正在载入朗读任务…</h1>
+    <p class="subtitle">打开麦克风后，请清楚、自然地朗读指定内容。</p>
+
+    <section id="taskCard" class="card hidden">
+      <span class="label">请朗读</span>
+      <p id="targetText" class="target"></p>
+      <p id="pinyin" class="pinyin hidden"></p>
+      <p id="russianHint" class="russian hidden"></p>
+      <p id="instructions" class="instructions hidden"></p>
+      <p id="dueAt" class="due hidden"></p>
+    </section>
+
+    <section id="studentCard" class="card hidden">
+      <label class="label" for="studentName">你的姓名或学号</label>
+      <input
+        id="studentName"
+        type="text"
+        maxlength="80"
+        autocomplete="name"
+        placeholder="例如：Ivan Petrov / A2-03"
+      >
+      <p class="small">请填写老师能识别的姓名或学号。当前阶段录音只保存在你的设备上，用于测试录音功能。</p>
+    </section>
+
+    <section id="recordCard" class="card hidden">
+      <span class="label">录音</span>
+
+      <div class="buttons">
+        <button id="startButton" class="primary" type="button">开始录音</button>
+        <button id="stopButton" class="danger hidden" type="button">停止录音</button>
+        <button id="resetButton" class="secondary hidden" type="button">删除并重新录制</button>
+      </div>
+
+      <div id="recordingIndicator" class="recording hidden">
+        <span class="dot"></span>
+        <span id="recordingTime">正在录音：00:00</span>
+      </div>
+
+      <audio id="audioPreview" class="hidden" controls></audio>
+
+      <div id="audioActions" class="buttons hidden">
+        <a id="downloadLink" class="download-link secondary" download="mandarin-reading.webm">下载录音</a>
+      </div>
+
+      <p id="recordStatus" class="status info">
+        点击“开始录音”，浏览器会请求麦克风权限。
+      </p>
+    </section>
+
+    <section id="errorCard" class="card hidden">
+      <p id="pageError" class="status error"></p>
+    </section>
+
+    <p class="footer">
+      本页会请求麦克风权限，仅用于录制本次朗读。请使用 Chrome、Edge、Safari 或 Firefox 的最新版浏览器。
+    </p>
+  </main>
+
+  <script>
+    // 只修改这一行：填写你自己的 Cloudflare Worker 地址，不要以 / 结尾。
+    const API_BASE = "https://mandarin-reading-api.dundunu8.workers.dev";
+
+    const taskId = getTaskIdFromUrl();
+
+    const state = {
+      task: null,
+      stream: null,
+      recorder: null,
+      chunks: [],
+      audioBlob: null,
+      audioUrl: null,
+      startedAt: null,
+      timerId: null,
+      maxSeconds: 60
+    };
+
+    const els = {
+      pageTitle: document.getElementById("pageTitle"),
+      taskCard: document.getElementById("taskCard"),
+      studentCard: document.getElementById("studentCard"),
+      recordCard: document.getElementById("recordCard"),
+      errorCard: document.getElementById("errorCard"),
+      pageError: document.getElementById("pageError"),
+      targetText: document.getElementById("targetText"),
+      pinyin: document.getElementById("pinyin"),
+      russianHint: document.getElementById("russianHint"),
+      instructions: document.getElementById("instructions"),
+      dueAt: document.getElementById("dueAt"),
+      studentName: document.getElementById("studentName"),
+      startButton: document.getElementById("startButton"),
+      stopButton: document.getElementById("stopButton"),
+      resetButton: document.getElementById("resetButton"),
+      recordingIndicator: document.getElementById("recordingIndicator"),
+      recordingTime: document.getElementById("recordingTime"),
+      audioPreview: document.getElementById("audioPreview"),
+      audioActions: document.getElementById("audioActions"),
+      downloadLink: document.getElementById("downloadLink"),
+      recordStatus: document.getElementById("recordStatus")
+    };
+
+    init();
+
+    async function init() {
+      if (!taskId) {
+        showPageError("链接不完整：未找到朗读任务编号。请向老师重新索取链接。");
+        return;
+      }
+
+      if (!API_BASE.startsWith("https://")) {
+        showPageError("网页尚未配置后端地址。请联系老师。");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${API_BASE}/api/tasks/${encodeURIComponent(taskId)}`
+        );
+        const data = await response.json();
+
+        if (!response.ok || !data.ok) {
+          throw new Error(data.error || "无法读取朗读任务。");
+        }
+
+        state.task = data.task;
+        renderTask(data.task);
+      } catch (error) {
+        showPageError(`无法加载任务：${error.message}`);
+      }
+    }
+
+    function renderTask(task) {
+      document.title = `${task.title} · 汉语朗读练习`;
+      els.pageTitle.textContent = task.title;
+      els.targetText.textContent = task.target_text;
+
+      setOptionalText(els.pinyin, task.pinyin);
+      setOptionalText(els.russianHint, task.russian_hint);
+      setOptionalText(els.instructions, task.instructions);
+
+      if (task.due_at) {
+        const due = new Date(task.due_at);
+        els.dueAt.textContent = `截止时间：${formatDate(due)}`;
+        els.dueAt.classList.remove("hidden");
+      }
+
+      els.taskCard.classList.remove("hidden");
+      els.studentCard.classList.remove("hidden");
+      els.recordCard.classList.remove("hidden");
+
+      els.startButton.addEventListener("click", startRecording);
+      els.stopButton.addEventListener("click", stopRecording);
+      els.resetButton.addEventListener("click", resetRecording);
+    }
+
+    function setOptionalText(element, value) {
+      if (value && value.trim()) {
+        element.textContent = value;
+        element.classList.remove("hidden");
+      }
+    }
+
+    async function startRecording() {
+      const studentName = els.studentName.value.trim();
+
+      if (!studentName) {
+        setRecordStatus("请先填写你的姓名或学号。", "warning");
+        els.studentName.focus();
+        return;
+      }
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setRecordStatus(
+          "当前浏览器不支持录音。请使用最新版 Chrome、Edge、Safari 或 Firefox。",
+          "error"
+        );
+        return;
+      }
+
+      try {
+        resetRecording(false);
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+
+        const mimeType = chooseSupportedMimeType();
+        const recorder = mimeType
+          ? new MediaRecorder(stream, { mimeType })
+          : new MediaRecorder(stream);
+
+        state.stream = stream;
+        state.recorder = recorder;
+        state.chunks = [];
+        state.startedAt = Date.now();
+
+        recorder.addEventListener("dataavailable", (event) => {
+          if (event.data && event.data.size > 0) {
+            state.chunks.push(event.data);
+          }
+        });
+
+        recorder.addEventListener("stop", onRecordingStopped);
+        recorder.start(250);
+
+        els.startButton.classList.add("hidden");
+        els.stopButton.classList.remove("hidden");
+        els.resetButton.classList.add("hidden");
+        els.recordingIndicator.classList.remove("hidden");
+        setRecordStatus(
+          `正在录音。请朗读指定内容；最长 ${state.maxSeconds} 秒。`,
+          "info"
+        );
+
+        startTimer();
+      } catch (error) {
+        const message = microphoneErrorMessage(error);
+        setRecordStatus(message, "error");
+      }
+    }
+
+    function stopRecording() {
+      if (state.recorder && state.recorder.state === "recording") {
+        state.recorder.stop();
+      }
+    }
+
+    function onRecordingStopped() {
+      stopTimer();
+      stopTracks();
+
+      const mimeType = state.recorder.mimeType || "audio/webm";
+      state.audioBlob = new Blob(state.chunks, { type: mimeType });
+
+      if (state.audioBlob.size === 0) {
+        setRecordStatus("没有录到声音，请检查麦克风后重试。", "error");
+        resetRecording(false);
+        return;
+      }
+
+      state.audioUrl = URL.createObjectURL(state.audioBlob);
+      els.audioPreview.src = state.audioUrl;
+      els.audioPreview.classList.remove("hidden");
+      els.downloadLink.href = state.audioUrl;
+      els.downloadLink.download = `mandarin-reading-${safeFileName(els.studentName.value)}.webm`;
+      els.audioActions.classList.remove("hidden");
+
+      els.recordingIndicator.classList.add("hidden");
+      els.stopButton.classList.add("hidden");
+      els.startButton.classList.remove("hidden");
+      els.resetButton.classList.remove("hidden");
+
+      const sizeKb = Math.round(state.audioBlob.size / 1024);
+      setRecordStatus(
+        `录音已完成（约 ${sizeKb} KB）。请先试听；下一阶段将增加“提交并自动评分”按钮。`,
+        "success"
+      );
+
+      state.recorder = null;
+      state.chunks = [];
+    }
+
+    function resetRecording(showMessage = true) {
+      stopTimer();
+
+      if (state.recorder && state.recorder.state === "recording") {
+        state.recorder.stop();
+      }
+
+      stopTracks();
+
+      if (state.audioUrl) {
+        URL.revokeObjectURL(state.audioUrl);
+      }
+
+      state.stream = null;
+      state.recorder = null;
+      state.chunks = [];
+      state.audioBlob = null;
+      state.audioUrl = null;
+      state.startedAt = null;
+
+      els.audioPreview.pause();
+      els.audioPreview.removeAttribute("src");
+      els.audioPreview.load();
+      els.audioPreview.classList.add("hidden");
+      els.audioActions.classList.add("hidden");
+      els.recordingIndicator.classList.add("hidden");
+      els.stopButton.classList.add("hidden");
+      els.startButton.classList.remove("hidden");
+      els.resetButton.classList.add("hidden");
+
+      if (showMessage) {
+        setRecordStatus("录音已删除。你可以重新录制。", "info");
+      }
+    }
+
+    function stopTracks() {
+      if (state.stream) {
+        state.stream.getTracks().forEach((track) => track.stop());
+      }
+      state.stream = null;
+    }
+
+    function startTimer() {
+      updateTimer();
+
+      state.timerId = window.setInterval(() => {
+        const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
+
+        if (elapsed >= state.maxSeconds) {
+          stopRecording();
+          return;
+        }
+
+        updateTimer();
+      }, 250);
+    }
+
+    function stopTimer() {
+      if (state.timerId) {
+        window.clearInterval(state.timerId);
+        state.timerId = null;
+      }
+    }
+
+    function updateTimer() {
+      const elapsed = state.startedAt
+        ? Math.floor((Date.now() - state.startedAt) / 1000)
+        : 0;
+
+      els.recordingTime.textContent = `正在录音：${formatSeconds(elapsed)} / ${formatSeconds(state.maxSeconds)}`;
+    }
+
+    function chooseSupportedMimeType() {
+      const candidates = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/ogg;codecs=opus",
+        "audio/mp4"
+      ];
+
+      return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || "";
+    }
+
+    function microphoneErrorMessage(error) {
+      if (error && error.name === "NotAllowedError") {
+        return "浏览器未获得麦克风权限。请在地址栏的站点权限中允许使用麦克风，然后刷新页面。";
+      }
+
+      if (error && error.name === "NotFoundError") {
+        return "未检测到可用麦克风。请连接麦克风或检查系统音频设备。";
+      }
+
+      return `无法开始录音：${error.message || "未知错误"}`;
+    }
+
+    function setRecordStatus(message, type) {
+      els.recordStatus.textContent = message;
+      els.recordStatus.className = `status ${type}`;
+    }
+
+    function showPageError(message) {
+      els.pageTitle.textContent = "无法打开朗读任务";
+      els.pageError.textContent = message;
+      els.errorCard.classList.remove("hidden");
+    }
+
+    function getTaskIdFromUrl() {
+      const hash = window.location.hash.replace(/^#\/?/, "");
+      const parts = hash.split("/").filter(Boolean);
+
+      if (parts[0] === "task" && parts[1]) {
+        return parts[1];
+      }
+
+      return "";
+    }
+
+    function formatDate(date) {
+      return new Intl.DateTimeFormat("ru-RU", {
+        dateStyle: "medium",
+        timeStyle: "short"
+      }).format(date);
+    }
+
+    function formatSeconds(totalSeconds) {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function safeFileName(value) {
+      return (value || "student")
+        .trim()
+        .replace(/[^\p{L}\p{N}_-]+/gu, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 40) || "student";
+    }
+
+    window.addEventListener("beforeunload", () => {
+      stopTracks();
+      if (state.audioUrl) {
+        URL.revokeObjectURL(state.audioUrl);
+      }
+    });
+  </script>
+</body>
+</html>
