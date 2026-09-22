@@ -318,9 +318,10 @@
 
       <audio id="audioPreview" class="hidden" controls></audio>
 
-      <div id="audioActions" class="buttons hidden">
-        <a id="downloadLink" class="download-link secondary" download="mandarin-reading.webm">下载录音</a>
-      </div>
+<div id="audioActions" class="buttons hidden">
+  <button id="submitButton" class="primary" type="button">提交作业并自动评分</button>
+  <a id="downloadLink" class="download-link secondary" download="mandarin-reading.webm">下载录音备份</a>
+</div>
 
       <p id="recordStatus" class="status info">
         点击“开始录音”，浏览器会请求麦克风权限。
@@ -375,6 +376,7 @@
       audioPreview: document.getElementById("audioPreview"),
       audioActions: document.getElementById("audioActions"),
       downloadLink: document.getElementById("downloadLink"),
+      submitButton: document.getElementById("submitButton"),
       recordStatus: document.getElementById("recordStatus")
     };
 
@@ -430,6 +432,7 @@
       els.startButton.addEventListener("click", startRecording);
       els.stopButton.addEventListener("click", stopRecording);
       els.resetButton.addEventListener("click", resetRecording);
+      els.submitButton.addEventListener("click", submitRecording);
     }
 
     function setOptionalText(element, value) {
@@ -535,7 +538,7 @@
 
       const sizeKb = Math.round(state.audioBlob.size / 1024);
       setRecordStatus(
-        `录音已完成（约 ${sizeKb} KB）。请先试听；下一阶段将增加“提交并自动评分”按钮。`,
+        `录音已完成（约 ${sizeKb} KB）。请先试听，确认后点击“提交作业并自动评分”。`,
         "success"
       );
 
@@ -543,6 +546,80 @@
       state.chunks = [];
     }
 
+    async function submitRecording() {
+  const studentName = els.studentName.value.trim();
+
+  if (!studentName) {
+    setRecordStatus("请先填写姓名或学号。", "warning");
+    els.studentName.focus();
+    return;
+  }
+
+  if (!state.audioBlob) {
+    setRecordStatus("请先完成录音并试听。", "warning");
+    return;
+  }
+
+  if (!state.task) {
+    setRecordStatus("任务信息尚未加载完成，请刷新页面后重试。", "error");
+    return;
+  }
+
+  const originalText = els.submitButton.textContent;
+  els.submitButton.disabled = true;
+  els.startButton.disabled = true;
+  els.resetButton.disabled = true;
+  els.submitButton.textContent = "正在上传并评分…";
+  setRecordStatus("正在安全上传录音，请不要关闭页面。", "info");
+
+  try {
+    const extension = extensionForMimeType(state.audioBlob.type);
+    const audioFile = new File(
+      [state.audioBlob],
+      `mandarin-reading.${extension}`,
+      { type: state.audioBlob.type || "audio/webm" }
+    );
+
+    const formData = new FormData();
+    formData.append("task_id", state.task.public_id);
+    formData.append("student_name", studentName);
+    formData.append("audio", audioFile);
+
+    const response = await fetch(`${API_BASE}/api/submissions`, {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || "提交失败，请稍后重试。");
+    }
+
+    els.submitButton.textContent = "已提交";
+    setRecordStatus(
+      `${data.message} 请保留本页，等待评分结果。`,
+      "success"
+    );
+  } catch (error) {
+    els.submitButton.disabled = false;
+    els.submitButton.textContent = originalText;
+    setRecordStatus(`提交失败：${error.message}`, "error");
+  } finally {
+    els.startButton.disabled = false;
+    els.resetButton.disabled = false;
+  }
+}
+
+function extensionForMimeType(mimeType) {
+  const type = (mimeType || "").toLowerCase();
+
+  if (type.includes("ogg")) return "ogg";
+  if (type.includes("mp4")) return "m4a";
+  if (type.includes("mpeg")) return "mp3";
+  if (type.includes("wav")) return "wav";
+  return "webm";
+}
     function resetRecording(showMessage = true) {
       stopTimer();
 
