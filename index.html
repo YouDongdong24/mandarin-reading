@@ -476,17 +476,34 @@
         formData.append("student_name", studentName);
         formData.append("audio", audioFile);
 
-        const response = await fetch(`${API_BASE.replace(/\/$/, "")}/api/submissions`, {
-          method: "POST",
-          body: formData
-        });
+        const submitUrl = `${API_BASE.replace(/\/$/, "")}/api/submissions`;
 
-        const data = await response.json();
+console.log("正在提交录音：", submitUrl);
+console.log("录音 MIME：", audioFile.type);
+console.log("录音大小（bytes）：", audioFile.size);
 
-        if (!response.ok || !data.ok) {
-          throw new Error(data.error || "提交失败。");
-        }
+const response = await fetch(submitUrl, {
+  method: "POST",
+  mode: "cors",
+  body: formData
+});
 
+const rawText = await response.text();
+
+console.log("提交接口状态：", response.status);
+console.log("提交接口响应：", rawText);
+
+let data;
+
+try {
+  data = JSON.parse(rawText);
+} catch {
+  throw new Error(`提交接口未返回 JSON（HTTP ${response.status}）。`);
+}
+
+if (!response.ok || !data.ok) {
+  throw new Error(data.error || `提交失败（HTTP ${response.status}）。`);
+}
         setStatus(data.message || "录音提交成功。", "success");
         els.submitButton.textContent = "已提交";
       } catch (error) {
