@@ -18,12 +18,12 @@
       --danger: #b42318;
       --soft-blue: #eff6ff;
       --soft-green: #ecfdf3;
+      --soft-yellow: #fffaeb;
+      --soft-red: #fef3f2;
       --shadow: 0 12px 30px rgba(16, 24, 40, .08);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -164,28 +164,12 @@
       opacity: .55;
     }
 
-    .primary {
-      color: white;
-      background: var(--primary);
-    }
+    .primary { color: white; background: var(--primary); }
+    .primary:hover:not(:disabled) { background: var(--primary-dark); }
+    .secondary { color: #344054; background: #eef2f6; }
+    .danger { color: white; background: var(--danger); }
 
-    .primary:hover:not(:disabled) {
-      background: var(--primary-dark);
-    }
-
-    .secondary {
-      color: #344054;
-      background: #eef2f6;
-    }
-
-    .danger {
-      color: white;
-      background: var(--danger);
-    }
-
-    .hidden {
-      display: none !important;
-    }
+    .hidden { display: none !important; }
 
     .status {
       margin: 16px 0 0;
@@ -194,25 +178,10 @@
       line-height: 1.5;
     }
 
-    .status.info {
-      color: #1d4ed8;
-      background: var(--soft-blue);
-    }
-
-    .status.success {
-      color: var(--success);
-      background: var(--soft-green);
-    }
-
-    .status.error {
-      color: var(--danger);
-      background: #fef3f2;
-    }
-
-    .status.warning {
-      color: var(--warning);
-      background: #fffaeb;
-    }
+    .status.info { color: #1d4ed8; background: var(--soft-blue); }
+    .status.success { color: var(--success); background: var(--soft-green); }
+    .status.error { color: var(--danger); background: var(--soft-red); }
+    .status.warning { color: var(--warning); background: var(--soft-yellow); }
 
     .recording {
       display: inline-flex;
@@ -250,6 +219,77 @@
       line-height: 1.55;
     }
 
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .results-header h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .score-total {
+      display: grid;
+      place-items: center;
+      flex: 0 0 100px;
+      width: 100px;
+      height: 100px;
+      color: var(--primary-dark);
+      background: var(--soft-blue);
+      border: 5px solid #bfdbfe;
+      border-radius: 50%;
+      text-align: center;
+    }
+
+    .score-total strong {
+      display: block;
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .score-total span {
+      margin-top: 3px;
+      color: #475467;
+      font-size: 12px;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .score-item {
+      padding: 13px;
+      background: #f8fafc;
+      border: 1px solid #eaecf0;
+      border-radius: 10px;
+    }
+
+    .score-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .score-item strong {
+      display: block;
+      margin-top: 5px;
+      font-size: 24px;
+    }
+
+    .result-note {
+      margin: 16px 0 0;
+      color: #475467;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
     .footer {
       margin-top: 20px;
       color: var(--muted);
@@ -272,6 +312,20 @@
       .buttons > * {
         width: 100%;
       }
+
+      .results-header {
+        align-items: flex-start;
+      }
+
+      .score-total {
+        flex-basis: 82px;
+        width: 82px;
+        height: 82px;
+      }
+
+      .score-total strong {
+        font-size: 25px;
+      }
     }
   </style>
 </head>
@@ -279,7 +333,7 @@
   <main class="page">
     <p class="brand">Mandarin Reading Practice</p>
     <h1 id="pageTitle">正在载入朗读任务…</h1>
-    <p class="subtitle">打开麦克风后，请清楚、自然地朗读指定内容。</p>
+    <p class="subtitle">请先听清题目，再清楚、自然地朗读。</p>
 
     <section id="taskCard" class="card hidden">
       <span class="label">请朗读</span>
@@ -299,7 +353,7 @@
         autocomplete="name"
         placeholder="例如：Ivan Petrov / A2-03"
       >
-      <p class="small">请填写老师能识别的姓名或学号。当前阶段录音只保存在你的设备上，用于测试录音功能。</p>
+      <p class="small">请填写老师能识别的姓名或学号。提交后，录音及评分仅用于本课程朗读练习。</p>
     </section>
 
     <section id="recordCard" class="card hidden">
@@ -318,13 +372,49 @@
 
       <audio id="audioPreview" class="hidden" controls></audio>
 
-<div id="audioActions" class="buttons hidden">
-  <button id="submitButton" class="primary" type="button">提交作业并自动评分</button>
-  <a id="downloadLink" class="download-link secondary" download="mandarin-reading.webm">下载录音备份</a>
-</div>
+      <div id="audioActions" class="buttons hidden">
+        <button id="submitButton" class="primary" type="button">提交并自动评分</button>
+        <a id="downloadLink" class="download-link secondary" download="mandarin-reading.webm">下载录音备份</a>
+      </div>
 
       <p id="recordStatus" class="status info">
         点击“开始录音”，浏览器会请求麦克风权限。
+      </p>
+    </section>
+
+    <section id="resultsCard" class="card hidden">
+      <div class="results-header">
+        <div>
+          <h2>自动评分结果</h2>
+          <p class="small">评分用于帮助练习，请结合老师的反馈和示范音进行改进。</p>
+        </div>
+        <div class="score-total">
+          <strong id="totalScore">—</strong>
+          <span>综合分</span>
+        </div>
+      </div>
+
+      <div class="score-grid">
+        <div class="score-item">
+          <span>完整度</span>
+          <strong id="integrityScore">—</strong>
+        </div>
+        <div class="score-item">
+          <span>流利度</span>
+          <strong id="fluencyScore">—</strong>
+        </div>
+        <div class="score-item">
+          <span>声韵</span>
+          <strong id="phoneScore">—</strong>
+        </div>
+        <div class="score-item">
+          <span>声调</span>
+          <strong id="toneScore">—</strong>
+        </div>
+      </div>
+
+      <p class="result-note">
+        提示：机器评分会受录音环境、麦克风、语速、自然变调和语调影响。它是练习参考，不是对个人普通话能力的最终判定。
       </p>
     </section>
 
@@ -333,14 +423,16 @@
     </section>
 
     <p class="footer">
-      本页会请求麦克风权限，仅用于录制本次朗读。请使用 Chrome、Edge、Safari 或 Firefox 的最新版浏览器。
+      本页会请求麦克风权限，用于录制并评分本次朗读。推荐使用 Chrome、Edge、Safari 或 Firefox 的最新版浏览器。
     </p>
   </main>
 
   <script>
-    // 只修改这一行：填写你自己的 Cloudflare Worker 地址，不要以 / 结尾。
-    const API_BASE = "https://mandarin-reading-api.dundunu8.workers.dev";
+    // 只修改这里：填入 Cloudflare Worker 地址，不要以 / 结尾。
+    const API_BASE = "https://https://mandarin-reading-api.dundunu8.workers.dev";
 
+    const TARGET_SAMPLE_RATE = 16000;
+    const MAX_RECORD_SECONDS = 60;
     const taskId = getTaskIdFromUrl();
 
     const state = {
@@ -350,9 +442,10 @@
       chunks: [],
       audioBlob: null,
       audioUrl: null,
+      pcmBase64: null,
       startedAt: null,
       timerId: null,
-      maxSeconds: 60
+      submitting: false
     };
 
     const els = {
@@ -360,6 +453,7 @@
       taskCard: document.getElementById("taskCard"),
       studentCard: document.getElementById("studentCard"),
       recordCard: document.getElementById("recordCard"),
+      resultsCard: document.getElementById("resultsCard"),
       errorCard: document.getElementById("errorCard"),
       pageError: document.getElementById("pageError"),
       targetText: document.getElementById("targetText"),
@@ -375,9 +469,14 @@
       recordingTime: document.getElementById("recordingTime"),
       audioPreview: document.getElementById("audioPreview"),
       audioActions: document.getElementById("audioActions"),
-      downloadLink: document.getElementById("downloadLink"),
       submitButton: document.getElementById("submitButton"),
-      recordStatus: document.getElementById("recordStatus")
+      downloadLink: document.getElementById("downloadLink"),
+      recordStatus: document.getElementById("recordStatus"),
+      totalScore: document.getElementById("totalScore"),
+      integrityScore: document.getElementById("integrityScore"),
+      fluencyScore: document.getElementById("fluencyScore"),
+      phoneScore: document.getElementById("phoneScore"),
+      toneScore: document.getElementById("toneScore")
     };
 
     init();
@@ -420,8 +519,7 @@
       setOptionalText(els.instructions, task.instructions);
 
       if (task.due_at) {
-        const due = new Date(task.due_at);
-        els.dueAt.textContent = `截止时间：${formatDate(due)}`;
+        els.dueAt.textContent = `截止时间：${formatDate(new Date(task.due_at))}`;
         els.dueAt.classList.remove("hidden");
       }
 
@@ -431,8 +529,8 @@
 
       els.startButton.addEventListener("click", startRecording);
       els.stopButton.addEventListener("click", stopRecording);
-      els.resetButton.addEventListener("click", resetRecording);
-      els.submitButton.addEventListener("click", submitRecording);
+      els.resetButton.addEventListener("click", () => resetRecording(true));
+      els.submitButton.addEventListener("click", submitAndEvaluate);
     }
 
     function setOptionalText(element, value) {
@@ -451,7 +549,7 @@
         return;
       }
 
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
         setRecordStatus(
           "当前浏览器不支持录音。请使用最新版 Chrome、Edge、Safari 或 Firefox。",
           "error"
@@ -493,15 +591,15 @@
         els.stopButton.classList.remove("hidden");
         els.resetButton.classList.add("hidden");
         els.recordingIndicator.classList.remove("hidden");
+        els.resultsCard.classList.add("hidden");
         setRecordStatus(
-          `正在录音。请朗读指定内容；最长 ${state.maxSeconds} 秒。`,
+          `正在录音。请朗读指定内容；最长 ${MAX_RECORD_SECONDS} 秒。`,
           "info"
         );
 
         startTimer();
       } catch (error) {
-        const message = microphoneErrorMessage(error);
-        setRecordStatus(message, "error");
+        setRecordStatus(microphoneErrorMessage(error), "error");
       }
     }
 
@@ -511,24 +609,28 @@
       }
     }
 
-    function onRecordingStopped() {
+    async function onRecordingStopped() {
       stopTimer();
       stopTracks();
 
-      const mimeType = state.recorder.mimeType || "audio/webm";
-      state.audioBlob = new Blob(state.chunks, { type: mimeType });
+      const mimeType = state.recorder?.mimeType || "audio/webm";
+      const blob = new Blob(state.chunks, { type: mimeType });
+      state.recorder = null;
+      state.chunks = [];
 
-      if (state.audioBlob.size === 0) {
+      if (blob.size === 0) {
         setRecordStatus("没有录到声音，请检查麦克风后重试。", "error");
         resetRecording(false);
         return;
       }
 
-      state.audioUrl = URL.createObjectURL(state.audioBlob);
+      state.audioBlob = blob;
+      state.audioUrl = URL.createObjectURL(blob);
+
       els.audioPreview.src = state.audioUrl;
       els.audioPreview.classList.remove("hidden");
       els.downloadLink.href = state.audioUrl;
-      els.downloadLink.download = `mandarin-reading-${safeFileName(els.studentName.value)}.webm`;
+      els.downloadLink.download = `mandarin-reading-${safeFileName(els.studentName.value)}.${extensionForMimeType(blob.type)}`;
       els.audioActions.classList.remove("hidden");
 
       els.recordingIndicator.classList.add("hidden");
@@ -536,90 +638,137 @@
       els.startButton.classList.remove("hidden");
       els.resetButton.classList.remove("hidden");
 
-      const sizeKb = Math.round(state.audioBlob.size / 1024);
-      setRecordStatus(
-        `录音已完成（约 ${sizeKb} KB）。请先试听，确认后点击“提交作业并自动评分”。`,
-        "success"
-      );
+      try {
+        setRecordStatus("正在准备评分音频…", "info");
+        state.pcmBase64 = await convertBlobToPcmBase64(blob, TARGET_SAMPLE_RATE);
 
-      state.recorder = null;
-      state.chunks = [];
+        const sizeKb = Math.round(blob.size / 1024);
+        setRecordStatus(
+          `录音已完成（约 ${sizeKb} KB）。请先试听，确认后点击“提交并自动评分”。`,
+          "success"
+        );
+      } catch (error) {
+        state.pcmBase64 = null;
+        setRecordStatus(
+          `录音已保存，可下载备份；但无法转换为评分格式：${error.message}。请使用 Chrome 或 Edge 重试。`,
+          "error"
+        );
+      }
     }
 
-    async function submitRecording() {
-  const studentName = els.studentName.value.trim();
+    async function submitAndEvaluate() {
+      const studentName = els.studentName.value.trim();
 
-  if (!studentName) {
-    setRecordStatus("请先填写姓名或学号。", "warning");
-    els.studentName.focus();
-    return;
-  }
+      if (!studentName) {
+        setRecordStatus("请先填写姓名或学号。", "warning");
+        els.studentName.focus();
+        return;
+      }
 
-  if (!state.audioBlob) {
-    setRecordStatus("请先完成录音并试听。", "warning");
-    return;
-  }
+      if (!state.audioBlob) {
+        setRecordStatus("请先完成录音并试听。", "warning");
+        return;
+      }
 
-  if (!state.task) {
-    setRecordStatus("任务信息尚未加载完成，请刷新页面后重试。", "error");
-    return;
-  }
+      if (!state.pcmBase64) {
+        setRecordStatus(
+          "当前录音尚未成功转换为评分格式。请用 Chrome 或 Edge 重新录制。",
+          "error"
+        );
+        return;
+      }
 
-  const originalText = els.submitButton.textContent;
-  els.submitButton.disabled = true;
-  els.startButton.disabled = true;
-  els.resetButton.disabled = true;
-  els.submitButton.textContent = "正在上传并评分…";
-  setRecordStatus("正在安全上传录音，请不要关闭页面。", "info");
+      if (!state.task || state.submitting) {
+        return;
+      }
 
-  try {
-    const extension = extensionForMimeType(state.audioBlob.type);
-    const audioFile = new File(
-      [state.audioBlob],
-      `mandarin-reading.${extension}`,
-      { type: state.audioBlob.type || "audio/webm" }
-    );
+      state.submitting = true;
+      setControlsDuringSubmit(true);
+      els.resultsCard.classList.add("hidden");
 
-    const formData = new FormData();
-    formData.append("task_id", state.task.public_id);
-    formData.append("student_name", studentName);
-    formData.append("audio", audioFile);
+      try {
+        setRecordStatus("第 1 步：正在保存录音…", "info");
 
-    const response = await fetch(`${API_BASE}/api/submissions`, {
-      method: "POST",
-      body: formData
-    });
+        const extension = extensionForMimeType(state.audioBlob.type);
+        const audioFile = new File(
+          [state.audioBlob],
+          `mandarin-reading.${extension}`,
+          { type: state.audioBlob.type || "audio/webm" }
+        );
 
-    const data = await response.json();
+        const formData = new FormData();
+        formData.append("task_id", state.task.public_id);
+        formData.append("student_name", studentName);
+        formData.append("audio", audioFile);
 
-    if (!response.ok || !data.ok) {
-      throw new Error(data.error || "提交失败，请稍后重试。");
+        const saveResponse = await fetch(`${API_BASE}/api/submissions`, {
+          method: "POST",
+          body: formData
+        });
+
+        const saveData = await saveResponse.json();
+
+        if (!saveResponse.ok || !saveData.ok) {
+          throw new Error(saveData.error || "保存录音失败。");
+        }
+
+        setRecordStatus("第 2 步：正在调用普通话自动评分，请稍候…", "info");
+
+        const evaluateResponse = await fetch(`${API_BASE}/api/evaluate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            task_id: state.task.public_id,
+            submission_id: saveData.submission.id,
+            pcm_base64: state.pcmBase64,
+            sample_rate: TARGET_SAMPLE_RATE
+          })
+        });
+
+        const evaluateData = await evaluateResponse.json();
+
+        if (!evaluateResponse.ok || !evaluateData.ok) {
+          throw new Error(evaluateData.error || "自动评分失败。");
+        }
+
+        renderEvaluation(evaluateData.evaluation);
+        setRecordStatus(
+          `提交和自动评分完成。这是你的第 ${saveData.submission.attempt_number} 次提交。`,
+          "success"
+        );
+      } catch (error) {
+        setRecordStatus(`提交或评分失败：${error.message}`, "error");
+      } finally {
+        state.submitting = false;
+        setControlsDuringSubmit(false);
+      }
     }
 
-    els.submitButton.textContent = "已提交";
-    setRecordStatus(
-      `${data.message} 请保留本页，等待评分结果。`,
-      "success"
-    );
-  } catch (error) {
-    els.submitButton.disabled = false;
-    els.submitButton.textContent = originalText;
-    setRecordStatus(`提交失败：${error.message}`, "error");
-  } finally {
-    els.startButton.disabled = false;
-    els.resetButton.disabled = false;
-  }
-}
+    function renderEvaluation(evaluation) {
+      els.totalScore.textContent = formatScore(evaluation.total_score);
+      els.integrityScore.textContent = formatScore(evaluation.integrity_score);
+      els.fluencyScore.textContent = formatScore(evaluation.fluency_score);
+      els.phoneScore.textContent = formatScore(evaluation.phone_score);
+      els.toneScore.textContent = formatScore(evaluation.tone_score);
+      els.resultsCard.classList.remove("hidden");
+      els.resultsCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
 
-function extensionForMimeType(mimeType) {
-  const type = (mimeType || "").toLowerCase();
+    function setControlsDuringSubmit(disabled) {
+      els.submitButton.disabled = disabled;
+      els.startButton.disabled = disabled;
+      els.resetButton.disabled = disabled;
+      els.stopButton.disabled = disabled;
 
-  if (type.includes("ogg")) return "ogg";
-  if (type.includes("mp4")) return "m4a";
-  if (type.includes("mpeg")) return "mp3";
-  if (type.includes("wav")) return "wav";
-  return "webm";
-}
+      if (disabled) {
+        els.submitButton.textContent = "正在提交并评分…";
+      } else if (els.submitButton.textContent !== "已完成评分") {
+        els.submitButton.textContent = "提交并自动评分";
+      }
+    }
+
     function resetRecording(showMessage = true) {
       stopTimer();
 
@@ -638,6 +787,7 @@ function extensionForMimeType(mimeType) {
       state.chunks = [];
       state.audioBlob = null;
       state.audioUrl = null;
+      state.pcmBase64 = null;
       state.startedAt = null;
 
       els.audioPreview.pause();
@@ -649,6 +799,7 @@ function extensionForMimeType(mimeType) {
       els.stopButton.classList.add("hidden");
       els.startButton.classList.remove("hidden");
       els.resetButton.classList.add("hidden");
+      els.resultsCard.classList.add("hidden");
 
       if (showMessage) {
         setRecordStatus("录音已删除。你可以重新录制。", "info");
@@ -668,7 +819,7 @@ function extensionForMimeType(mimeType) {
       state.timerId = window.setInterval(() => {
         const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
 
-        if (elapsed >= state.maxSeconds) {
+        if (elapsed >= MAX_RECORD_SECONDS) {
           stopRecording();
           return;
         }
@@ -689,30 +840,120 @@ function extensionForMimeType(mimeType) {
         ? Math.floor((Date.now() - state.startedAt) / 1000)
         : 0;
 
-      els.recordingTime.textContent = `正在录音：${formatSeconds(elapsed)} / ${formatSeconds(state.maxSeconds)}`;
+      els.recordingTime.textContent =
+        `正在录音：${formatSeconds(elapsed)} / ${formatSeconds(MAX_RECORD_SECONDS)}`;
+    }
+
+    async function convertBlobToPcmBase64(blob, targetSampleRate) {
+      const arrayBuffer = await blob.arrayBuffer();
+      const audioContext = new AudioContext();
+
+      try {
+        const decoded = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+        const mono = mixToMono(decoded);
+        const resampled = await resampleToRate(mono, decoded.sampleRate, targetSampleRate);
+        const pcmBuffer = floatTo16BitPcm(resampled);
+        return arrayBufferToBase64(pcmBuffer.buffer);
+      } finally {
+        await audioContext.close();
+      }
+    }
+
+    function mixToMono(audioBuffer) {
+      const length = audioBuffer.length;
+      const channels = audioBuffer.numberOfChannels;
+      const mono = new Float32Array(length);
+
+      for (let channel = 0; channel < channels; channel += 1) {
+        const data = audioBuffer.getChannelData(channel);
+
+        for (let i = 0; i < length; i += 1) {
+          mono[i] += data[i] / channels;
+        }
+      }
+
+      return mono;
+    }
+
+    async function resampleToRate(samples, sourceRate, targetRate) {
+      if (sourceRate === targetRate) {
+        return samples;
+      }
+
+      const frameCount = Math.ceil(samples.length * targetRate / sourceRate);
+      const offline = new OfflineAudioContext(1, frameCount, targetRate);
+      const buffer = offline.createBuffer(1, samples.length, sourceRate);
+      buffer.copyToChannel(samples, 0);
+
+      const source = offline.createBufferSource();
+      source.buffer = buffer;
+      source.connect(offline.destination);
+      source.start();
+
+      const rendered = await offline.startRendering();
+      return rendered.getChannelData(0);
+    }
+
+    function floatTo16BitPcm(samples) {
+      const output = new Int16Array(samples.length);
+
+      for (let i = 0; i < samples.length; i += 1) {
+        const value = Math.max(-1, Math.min(1, samples[i]));
+        output[i] = value < 0 ? value * 0x8000 : value * 0x7fff;
+      }
+
+      return output;
+    }
+
+    function arrayBufferToBase64(buffer) {
+      const bytes = new Uint8Array(buffer);
+      const chunkSize = 0x8000;
+      let binary = "";
+
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, i + chunkSize);
+        binary += String.fromCharCode(...chunk);
+      }
+
+      return btoa(binary);
     }
 
     function chooseSupportedMimeType() {
       const candidates = [
         "audio/webm;codecs=opus",
         "audio/webm",
+        "audio/mp4",
         "audio/ogg;codecs=opus",
-        "audio/mp4"
+        "audio/ogg"
       ];
 
       return candidates.find((type) => MediaRecorder.isTypeSupported(type)) || "";
     }
 
     function microphoneErrorMessage(error) {
-      if (error && error.name === "NotAllowedError") {
+      if (error?.name === "NotAllowedError") {
         return "浏览器未获得麦克风权限。请在地址栏的站点权限中允许使用麦克风，然后刷新页面。";
       }
 
-      if (error && error.name === "NotFoundError") {
+      if (error?.name === "NotFoundError") {
         return "未检测到可用麦克风。请连接麦克风或检查系统音频设备。";
       }
 
-      return `无法开始录音：${error.message || "未知错误"}`;
+      return `无法开始录音：${error?.message || "未知错误"}`;
+    }
+
+    function extensionForMimeType(mimeType) {
+      const type = (mimeType || "").toLowerCase();
+      if (type.includes("ogg")) return "ogg";
+      if (type.includes("mp4")) return "m4a";
+      if (type.includes("mpeg")) return "mp3";
+      if (type.includes("wav")) return "wav";
+      return "webm";
+    }
+
+    function formatScore(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number.toFixed(1) : "—";
     }
 
     function setRecordStatus(message, type) {
@@ -729,12 +970,7 @@ function extensionForMimeType(mimeType) {
     function getTaskIdFromUrl() {
       const hash = window.location.hash.replace(/^#\/?/, "");
       const parts = hash.split("/").filter(Boolean);
-
-      if (parts[0] === "task" && parts[1]) {
-        return parts[1];
-      }
-
-      return "";
+      return parts[0] === "task" && parts[1] ? parts[1] : "";
     }
 
     function formatDate(date) {
