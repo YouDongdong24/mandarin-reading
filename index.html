@@ -493,21 +493,40 @@
       }
 
       try {
-        const response = await fetch(
-          `${API_BASE}/api/tasks/${encodeURIComponent(taskId)}`
-        );
-        const data = await response.json();
+  const requestUrl =
+    `${API_BASE.trim().replace(/\/$/, "")}/api/tasks/${encodeURIComponent(taskId)}`;
 
-        if (!response.ok || !data.ok) {
-          throw new Error(data.error || "无法读取朗读任务。");
-        }
+  console.log("正在读取任务：", requestUrl);
+  console.log("当前页面来源：", window.location.origin);
 
-        state.task = data.task;
-        renderTask(data.task);
-      } catch (error) {
-        showPageError(`无法加载任务：${error.message}`);
-      }
-    }
+  const response = await fetch(requestUrl, {
+    method: "GET",
+    mode: "cors",
+    cache: "no-store"
+  });
+
+  const rawText = await response.text();
+  console.log("任务接口状态：", response.status);
+  console.log("任务接口响应：", rawText);
+
+  let data;
+
+  try {
+    data = JSON.parse(rawText);
+  } catch {
+    throw new Error(`接口没有返回 JSON（HTTP ${response.status}）。`);
+  }
+
+  if (!response.ok || !data.ok) {
+    throw new Error(data.error || `无法读取朗读任务（HTTP ${response.status}）。`);
+  }
+
+  state.task = data.task;
+  renderTask(data.task);
+} catch (error) {
+  console.error("任务加载失败：", error);
+  showPageError(`无法加载任务：${error.message || String(error)}`);
+}
 
     function renderTask(task) {
       document.title = `${task.title} · 汉语朗读练习`;
