@@ -412,62 +412,64 @@
       }
     }
 
-    function onRecordingStopped() {
-      stopTimer();
-      stopTracks();
+    async function onRecordingStopped() {
+  stopTimer();
+  stopTracks();
 
-      const mimeType = state.recorder ? state.recorder.mimeType : "audio/webm";
-      const blob = new Blob(state.chunks, { type: mimeType });
+  const mimeType = state.recorder ? state.recorder.mimeType : "audio/webm";
+  const blob = new Blob(state.chunks, { type: mimeType });
 
-      state.recorder = null;
-      state.chunks = [];
+  state.recorder = null;
+  state.chunks = [];
 
-      if (blob.size === 0) {
-        setStatus("没有录到声音，请检查麦克风后重试。", "error");
-        return;
-      }
+  if (blob.size === 0) {
+    setStatus("没有录到声音，请检查麦克风后重试。", "error");
+    return;
+  }
 
-      state.audioBlob = blob;
-      state.audioUrl = URL.createObjectURL(blob);
+  state.audioBlob = blob;
+  state.audioUrl = URL.createObjectURL(blob);
 
-      els.audioPreview.src = state.audioUrl;
-      els.audioPreview.classList.remove("hidden");
-      els.downloadLink.href = state.audioUrl;
-      els.downloadLink.download = `mandarin-reading-${safeFileName(els.studentName.value)}.${extensionForMimeType(blob.type)}`;
-      els.audioActions.classList.remove("hidden");
+  els.audioPreview.src = state.audioUrl;
+  els.audioPreview.classList.remove("hidden");
+  els.downloadLink.href = state.audioUrl;
+  els.downloadLink.download =
+    `mandarin-reading-${safeFileName(els.studentName.value)}.${extensionForMimeType(blob.type)}`;
+  els.audioActions.classList.remove("hidden");
 
-      els.recordingIndicator.classList.add("hidden");
-      els.stopButton.classList.add("hidden");
-      els.startButton.classList.remove("hidden");
-      els.resetButton.classList.remove("hidden");
+  els.recordingIndicator.classList.add("hidden");
+  els.stopButton.classList.add("hidden");
+  els.startButton.classList.remove("hidden");
+  els.resetButton.classList.remove("hidden");
 
-      setStatus("录音已完成。正在准备自动评分所需的音频格式…", "info");
+  // PCM 转换代码必须在这里，且函数必须是 async。
+  setStatus("录音已完成。正在准备自动评分所需的音频格式…", "info");
 
-try {
-  const pcm = await convertBlobToPcm(blob, 16000);
+  try {
+    const pcm = await convertBlobToPcm(blob, 16000);
 
-  state.pcmBase64 = pcm.base64;
-  state.pcmByteLength = pcm.byteLength;
+    state.pcmBase64 = pcm.base64;
+    state.pcmByteLength = pcm.byteLength;
 
-  console.log("PCM 生成成功：", pcm.byteLength, "bytes");
-  console.log("PCM 参数：16 kHz / 单声道 / 16-bit");
+    console.log("PCM 生成成功：", pcm.byteLength, "bytes");
+    console.log("PCM 参数：16 kHz / 单声道 / 16-bit");
 
-  setStatus(
-    `录音已完成，评分音频已准备好（PCM ${Math.round(pcm.byteLength / 1024)} KB）。请先试听，确认后点击“提交录音”。`,
-    "success"
-  );
-} catch (error) {
-  state.pcmBase64 = null;
-  state.pcmByteLength = 0;
+    setStatus(
+      `录音已完成，评分音频已准备好（PCM ${Math.round(pcm.byteLength / 1024)} KB）。请先试听，确认后点击“提交录音”。`,
+      "success"
+    );
+  } catch (error) {
+    state.pcmBase64 = null;
+    state.pcmByteLength = 0;
 
-  console.error("PCM 转换失败：", error);
+    console.error("PCM 转换失败：", error);
 
-  setStatus(
-    `录音已完成，但无法准备自动评分音频：${error.message || String(error)}。请使用 Chrome 或 Edge 重试。`,
-    "warning"
-  );
+    setStatus(
+      `录音已完成，但无法准备自动评分音频：${error.message || String(error)}。请使用 Chrome 或 Edge 重试。`,
+      "warning"
+    );
+  }
 }
-    }
 
     async function submitRecording() {
       if (!state.audioBlob) {
