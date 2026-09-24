@@ -178,7 +178,76 @@
       width: 100%;
       margin-top: 16px;
     }
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
 
+.results-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.score-total {
+  display: grid;
+  place-items: center;
+  flex: 0 0 96px;
+  width: 96px;
+  height: 96px;
+  color: var(--primary);
+  background: #eff6ff;
+  border: 4px solid #bfdbfe;
+  border-radius: 50%;
+  text-align: center;
+}
+
+.score-total strong {
+  display: block;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.score-total span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.score-item {
+  padding: 13px;
+  background: #f8fafc;
+  border: 1px solid #eaecf0;
+  border-radius: 10px;
+}
+
+.score-item span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.score-item strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 24px;
+}
+
+.result-note {
+  margin: 16px 0 0;
+  color: #475467;
+  font-size: 13px;
+  line-height: 1.6;
+}
     .small {
       margin: 12px 0 0;
       color: var(--muted);
@@ -248,7 +317,41 @@
         点击“开始录音”，浏览器会请求麦克风权限。
       </p>
     </section>
+<section id="resultsCard" class="card hidden">
+  <div class="results-header">
+    <div>
+      <h2>自动评分结果</h2>
+      <p class="small">评分用于帮助练习，请结合老师的反馈和示范音进行改进。</p>
+    </div>
+    <div class="score-total">
+      <strong id="totalScore">—</strong>
+      <span>综合分</span>
+    </div>
+  </div>
 
+  <div class="score-grid">
+    <div class="score-item">
+      <span>完整度</span>
+      <strong id="integrityScore">—</strong>
+    </div>
+    <div class="score-item">
+      <span>流利度</span>
+      <strong id="fluencyScore">—</strong>
+    </div>
+    <div class="score-item">
+      <span>声韵</span>
+      <strong id="phoneScore">—</strong>
+    </div>
+    <div class="score-item">
+      <span>声调</span>
+      <strong id="toneScore">—</strong>
+    </div>
+  </div>
+
+  <p class="result-note">
+    机器评分会受到录音环境、设备、语速、自然变调和语调的影响。该结果仅用于练习参考，不是对个人普通话能力的最终判定。
+  </p>
+</section>
     <section id="errorCard" class="card hidden">
       <p id="pageError" class="status error"></p>
     </section>
@@ -278,6 +381,7 @@
       taskCard: document.getElementById("taskCard"),
       studentCard: document.getElementById("studentCard"),
       recordCard: document.getElementById("recordCard"),
+      resultsCard: document.getElementById("resultsCard"),
       errorCard: document.getElementById("errorCard"),
       pageError: document.getElementById("pageError"),
       targetText: document.getElementById("targetText"),
@@ -294,7 +398,12 @@
       audioActions: document.getElementById("audioActions"),
       submitButton: document.getElementById("submitButton"),
       downloadLink: document.getElementById("downloadLink"),
-      recordStatus: document.getElementById("recordStatus")
+      recordStatus: document.getElementById("recordStatus"),
+      totalScore: document.getElementById("totalScore"),
+      integrityScore: document.getElementById("integrityScore"),
+      fluencyScore: document.getElementById("fluencyScore"),
+      phoneScore: document.getElementById("phoneScore"),
+      toneScore: document.getElementById("toneScore")
     };
 
     init();
@@ -518,8 +627,42 @@ const data = await response.json();
 if (!response.ok || !data.ok) {
   throw new Error(data.error || "提交失败。");
 }
-        setStatus(data.message || "录音提交成功。", "success");
-        els.submitButton.textContent = "已提交";
+        setStatus("录音已保存。正在进行普通话自动评分，请稍候…", "info");
+
+if (!state.pcmBase64) {
+  throw new Error("评分音频尚未准备完成。请重新录音后再提交。");
+}
+
+const evaluateResponse = await fetch(
+  `${API_BASE.replace(/\/$/, "")}/api/evaluate`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      task_id: state.task.public_id,
+      submission_id: data.submission.id,
+      pcm_base64: state.pcmBase64,
+      sample_rate: 16000
+    })
+  }
+);
+
+const evaluateData = await evaluateResponse.json();
+
+if (!evaluateResponse.ok || !evaluateData.ok) {
+  throw new Error(evaluateData.error || "自动评分失败。");
+}
+
+renderEvaluation(evaluateData.evaluation);
+
+setStatus(
+  `提交和自动评分完成。这是你的第 ${data.submission.attempt_number} 次提交。`,
+  "success"
+);
+
+els.submitButton.textContent = "已完成评分";
       } catch (error) {
         setStatus(`提交失败：${error.message || String(error)}`, "error");
         els.submitButton.disabled = false;
@@ -553,6 +696,7 @@ if (!response.ok || !data.ok) {
       els.audioPreview.classList.add("hidden");
       els.audioActions.classList.add("hidden");
       els.recordingIndicator.classList.add("hidden");
+      els.resultsCard.classList.add("hidden");
       els.stopButton.classList.add("hidden");
       els.startButton.classList.remove("hidden");
       els.resetButton.classList.add("hidden");
@@ -774,6 +918,24 @@ function arrayBufferToBase64(buffer) {
   }
 
   return window.btoa(binary);
+}
+    function renderEvaluation(evaluation) {
+  els.totalScore.textContent = formatScore(evaluation.total_score);
+  els.integrityScore.textContent = formatScore(evaluation.integrity_score);
+  els.fluencyScore.textContent = formatScore(evaluation.fluency_score);
+  els.phoneScore.textContent = formatScore(evaluation.phone_score);
+  els.toneScore.textContent = formatScore(evaluation.tone_score);
+
+  els.resultsCard.classList.remove("hidden");
+  els.resultsCard.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+}
+
+function formatScore(value) {
+  const score = Number(value);
+  return Number.isFinite(score) ? score.toFixed(1) : "—";
 }
   </script>
 </body>
